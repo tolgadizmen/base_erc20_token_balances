@@ -5,18 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Coffee Consumption Visualization</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Add D3.js library -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
     <div class="content">
         <h1>Coffee Consumption 2023</h1>
-        <div class="chart">
-            <!-- Bars will be added here by JavaScript -->
-        </div>
-        <div class="axis-label">Cups per Month</div>
+        <div id="chart"></div>
     </div>
 
     <script>
-        // Hardcoded data: Monthly coffee consumption in cups
+        // Data
         const coffeeData = [
             { month: 'Jan', cups: 45 },
             { month: 'Feb', cups: 38 },
@@ -32,38 +31,86 @@
             { month: 'Dec', cups: 51 }
         ];
 
-        // Find the maximum value for scaling
-        const maxCups = Math.max(...coffeeData.map(d => d.cups));
+        // Set dimensions
+        const margin = { top: 40, right: 20, bottom: 40, left: 40 };
+        const width = 800 - margin.left - margin.right;
+        const height = 400 - margin.top - margin.bottom;
 
-        // Create and append bars
-        const chart = document.querySelector('.chart');
-        
-        coffeeData.forEach(data => {
-            // Create bar container
-            const bar = document.createElement('div');
-            bar.className = 'bar-container';
+        // Create SVG
+        const svg = d3.select('#chart')
+            .append('svg')
+            .attr('width', width + margin.left + margin.right)
+            .attr('height', height + margin.top + margin.bottom)
+            .append('g')
+            .attr('transform', `translate(${margin.left},${margin.top})`);
 
-            // Create the actual bar
-            const barFill = document.createElement('div');
-            barFill.className = 'bar-fill';
-            barFill.style.height = `${(data.cups / maxCups) * 200}px`; // Scale to 200px max height
+        // Create scales
+        const x = d3.scaleBand()
+            .range([0, width])
+            .padding(0.2);
 
-            // Create label
-            const label = document.createElement('div');
-            label.className = 'bar-label';
-            label.textContent = data.month;
+        const y = d3.scaleLinear()
+            .range([height, 0]);
 
-            // Create value label
-            const valueLabel = document.createElement('div');
-            valueLabel.className = 'value-label';
-            valueLabel.textContent = data.cups;
+        // Set domains
+        x.domain(coffeeData.map(d => d.month));
+        y.domain([0, d3.max(coffeeData, d => d.cups)]);
 
-            // Append elements
-            bar.appendChild(valueLabel);
-            bar.appendChild(barFill);
-            bar.appendChild(label);
-            chart.appendChild(bar);
-        });
+        // Add X axis
+        svg.append('g')
+            .attr('transform', `translate(0,${height})`)
+            .call(d3.axisBottom(x))
+            .style('font-family', 'IBM Plex Mono')
+            .style('font-size', '12px');
+
+        // Add Y axis
+        svg.append('g')
+            .call(d3.axisLeft(y))
+            .style('font-family', 'IBM Plex Mono')
+            .style('font-size', '12px');
+
+        // Add bars
+        svg.selectAll('rect')
+            .data(coffeeData)
+            .enter()
+            .append('rect')
+            .attr('x', d => x(d.month))
+            .attr('y', d => y(d.cups))
+            .attr('width', x.bandwidth())
+            .attr('height', d => height - y(d.cups))
+            .attr('fill', '#000000')
+            .on('mouseover', function(event, d) {
+                d3.select(this)
+                    .attr('fill', '#666666');
+                
+                // Add value label on hover
+                svg.append('text')
+                    .attr('class', 'value-label')
+                    .attr('x', x(d.month) + x.bandwidth()/2)
+                    .attr('y', y(d.cups) - 5)
+                    .attr('text-anchor', 'middle')
+                    .style('font-family', 'IBM Plex Mono')
+                    .style('font-size', '12px')
+                    .text(d.cups);
+            })
+            .on('mouseout', function() {
+                d3.select(this)
+                    .attr('fill', '#000000');
+                
+                // Remove value label
+                svg.selectAll('.value-label').remove();
+            });
+
+        // Add Y axis label
+        svg.append('text')
+            .attr('transform', 'rotate(-90)')
+            .attr('y', 0 - margin.left)
+            .attr('x', 0 - (height / 2))
+            .attr('dy', '1em')
+            .style('text-anchor', 'middle')
+            .style('font-family', 'IBM Plex Mono')
+            .style('font-size', '12px')
+            .text('Cups per Month');
     </script>
 </body>
 </html> 
