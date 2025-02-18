@@ -89,4 +89,18 @@ th {
 
 td {
     font-weight: 400;
+}
+
+/* Add these new styles for the chart section */
+.chart-container {
+    margin-top: 40px;
+    margin-bottom: 40px;
+    padding: 20px;
+    border: 2px solid #000000;
+    background-color: #ffffff;
+}
+
+canvas {
+    max-width: 100%;
+    height: auto;
 } 

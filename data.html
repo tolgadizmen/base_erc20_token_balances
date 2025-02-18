@@ -5,10 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EU Countries Data - Test Website</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="content">
         <h1>EU Countries</h1>
+        
+        <div class="chart-container">
+            <canvas id="populationChart"></canvas>
+        </div>
+
         <table id="countryData">
             <thead>
                 <tr>
@@ -31,7 +37,6 @@
     <script>
         async function fetchCountryData() {
             try {
-                // EU member states
                 const euCountries = [
                     'austria', 'belgium', 'bulgaria', 'croatia', 'cyprus',
                     'czech republic', 'denmark', 'estonia', 'finland', 'france',
@@ -42,9 +47,8 @@
                 ];
 
                 const tbody = document.querySelector('#countryData tbody');
-                tbody.innerHTML = ''; // Clear existing content
+                tbody.innerHTML = '';
 
-                // Fetch data for all EU countries
                 const promises = euCountries.map(country => 
                     fetch(`https://restcountries.com/v3.1/name/${country}`)
                         .then(response => response.json())
@@ -52,9 +56,18 @@
 
                 const results = await Promise.all(promises);
                 
-                // Process and display data
+                // Process data for both table and chart
+                const countries = [];
+                const populations = [];
+
                 results.forEach(data => {
                     const country = data[0];
+                    
+                    // Store data for chart
+                    countries.push(country.name.common);
+                    populations.push(country.population);
+
+                    // Create table row
                     const row = `
                         <tr>
                             <td>${country.name.common}</td>
@@ -64,6 +77,54 @@
                         </tr>
                     `;
                     tbody.innerHTML += row;
+                });
+
+                // Create the chart
+                const ctx = document.getElementById('populationChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: countries,
+                        datasets: [{
+                            label: 'Population',
+                            data: populations,
+                            backgroundColor: '#000000',
+                            borderColor: '#000000',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    font: {
+                                        family: 'IBM Plex Mono'
+                                    }
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    font: {
+                                        family: 'IBM Plex Mono'
+                                    },
+                                    maxRotation: 45,
+                                    minRotation: 45
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    font: {
+                                        family: 'IBM Plex Mono'
+                                    }
+                                }
+                            }
+                        }
+                    }
                 });
 
             } catch (error) {
