@@ -59,4 +59,23 @@ h1 {
     .content {
         padding: 1rem;
     }
+}
+
+/* Add these new table styles at the end of the file */
+table {
+    margin-top: 20px;
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #3498db;
+    color: white;
 } 
