@@ -3,114 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coffee Consumption Visualization</title>
+    <title>Dune Analytics Data</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- Add D3.js library -->
-    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
     <div class="content">
-        <h1>Coffee Consumption 2023</h1>
-        <div id="chart"></div>
+        <h1>ERC20 Token Balances</h1>
+        <div id="loading">Loading data...</div>
+        <table id="tokenTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Token Name</th>
+                    <th>Symbol</th>
+                    <th>Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be inserted here -->
+            </tbody>
+        </table>
     </div>
 
     <script>
-        // Data
-        const coffeeData = [
-            { month: 'Jan', cups: 45 },
-            { month: 'Feb', cups: 38 },
-            { month: 'Mar', cups: 52 },
-            { month: 'Apr', cups: 41 },
-            { month: 'May', cups: 55 },
-            { month: 'Jun', cups: 48 },
-            { month: 'Jul', cups: 42 },
-            { month: 'Aug', cups: 39 },
-            { month: 'Sep', cups: 47 },
-            { month: 'Oct', cups: 53 },
-            { month: 'Nov', cups: 44 },
-            { month: 'Dec', cups: 51 }
-        ];
-
-        // Set dimensions
-        const margin = { top: 40, right: 20, bottom: 40, left: 40 };
-        const width = 800 - margin.left - margin.right;
-        const height = 400 - margin.top - margin.bottom;
-
-        // Create SVG
-        const svg = d3.select('#chart')
-            .append('svg')
-            .attr('width', width + margin.left + margin.right)
-            .attr('height', height + margin.top + margin.bottom)
-            .append('g')
-            .attr('transform', `translate(${margin.left},${margin.top})`);
-
-        // Create scales
-        const x = d3.scaleBand()
-            .range([0, width])
-            .padding(0.2);
-
-        const y = d3.scaleLinear()
-            .range([height, 0]);
-
-        // Set domains
-        x.domain(coffeeData.map(d => d.month));
-        y.domain([0, d3.max(coffeeData, d => d.cups)]);
-
-        // Add X axis
-        svg.append('g')
-            .attr('transform', `translate(0,${height})`)
-            .call(d3.axisBottom(x))
-            .style('font-family', 'IBM Plex Mono')
-            .style('font-size', '12px');
-
-        // Add Y axis
-        svg.append('g')
-            .call(d3.axisLeft(y))
-            .style('font-family', 'IBM Plex Mono')
-            .style('font-size', '12px');
-
-        // Add bars
-        svg.selectAll('rect')
-            .data(coffeeData)
-            .enter()
-            .append('rect')
-            .attr('x', d => x(d.month))
-            .attr('y', d => y(d.cups))
-            .attr('width', x.bandwidth())
-            .attr('height', d => height - y(d.cups))
-            .attr('fill', '#000000')
-            .on('mouseover', function(event, d) {
-                d3.select(this)
-                    .attr('fill', '#666666');
+        async function fetchDuneData() {
+            try {
+                const response = await fetch('/api/dune-data');  // This will call our Vercel serverless function
+                const data = await response.json();
                 
-                // Add value label on hover
-                svg.append('text')
-                    .attr('class', 'value-label')
-                    .attr('x', x(d.month) + x.bandwidth()/2)
-                    .attr('y', y(d.cups) - 5)
-                    .attr('text-anchor', 'middle')
-                    .style('font-family', 'IBM Plex Mono')
-                    .style('font-size', '12px')
-                    .text(d.cups);
-            })
-            .on('mouseout', function() {
-                d3.select(this)
-                    .attr('fill', '#000000');
+                document.getElementById('loading').style.display = 'none';
                 
-                // Remove value label
-                svg.selectAll('.value-label').remove();
+                const table = document.getElementById('tokenTable');
+                table.style.display = 'table';
+                
+                const tbody = table.querySelector('tbody');
+                tbody.innerHTML = '';
+                
+                data.forEach(token => {
+                    const row = `
+                        <tr>
+                            <td>${token.name || 'Unknown'}</td>
+                            <td>${token.symbol || 'Unknown'}</td>
+                            <td>${formatBalance(token.balance, token.decimals)}</td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                document.getElementById('loading').textContent = 'Error loading data. Please try again later.';
+            }
+        }
+
+        function formatBalance(balance, decimals) {
+            if (!balance) return '0';
+            const number = parseInt(balance) / Math.pow(10, decimals || 18);
+            return number.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 6
             });
+        }
 
-        // Add Y axis label
-        svg.append('text')
-            .attr('transform', 'rotate(-90)')
-            .attr('y', 0 - margin.left)
-            .attr('x', 0 - (height / 2))
-            .attr('dy', '1em')
-            .style('text-anchor', 'middle')
-            .style('font-family', 'IBM Plex Mono')
-            .style('font-size', '12px')
-            .text('Cups per Month');
+        fetchDuneData();
     </script>
 </body>
 </html> 
