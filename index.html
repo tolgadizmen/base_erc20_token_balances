@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dune Analytics Data</title>
+    <title>Base Chain Token Balances</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="content">
-        <h1>ERC20 Token Balances</h1>
+        <h1>Base Chain Token Balances</h1>
         <div id="loading">Loading data...</div>
         <table id="tokenTable" style="display: none;">
             <thead>
@@ -16,6 +16,8 @@
                     <th>Token Name</th>
                     <th>Symbol</th>
                     <th>Balance</th>
+                    <th>Value (USD)</th>
+                    <th>Chain</th>
                 </tr>
             </thead>
             <tbody>
@@ -27,7 +29,7 @@
     <script>
         async function fetchDuneData() {
             try {
-                const response = await fetch('/api/dune-data');  // This will call our Vercel serverless function
+                const response = await fetch('/api/dune-data');
                 const data = await response.json();
                 
                 document.getElementById('loading').style.display = 'none';
@@ -38,12 +40,17 @@
                 const tbody = table.querySelector('tbody');
                 tbody.innerHTML = '';
                 
-                data.forEach(token => {
+                // Check if data is an array
+                const tokens = Array.isArray(data) ? data : [data];
+                
+                tokens.forEach(token => {
                     const row = `
                         <tr>
                             <td>${token.name || 'Unknown'}</td>
                             <td>${token.symbol || 'Unknown'}</td>
-                            <td>${formatBalance(token.balance, token.decimals)}</td>
+                            <td>${formatBalance(token.amount, token.decimals)}</td>
+                            <td>$${formatUSD(token.value_usd)}</td>
+                            <td>${token.chain || 'Unknown'}</td>
                         </tr>
                     `;
                     tbody.innerHTML += row;
@@ -58,6 +65,14 @@
             if (!balance) return '0';
             const number = parseInt(balance) / Math.pow(10, decimals || 18);
             return number.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 6
+            });
+        }
+
+        function formatUSD(value) {
+            if (!value) return '0.00';
+            return Number(value).toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 6
             });
