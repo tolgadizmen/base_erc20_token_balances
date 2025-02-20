@@ -7,20 +7,36 @@ export default async function handler(req, res) {
     };
 
     try {
+        console.log('Attempting to fetch with API key:', process.env.test_to_dune_echo ? 'Key exists' : 'No key found');
+        
         const response = await fetch('https://api.dune.com/api/echo/v1/balances/evm/0xf924efc8830bfA1029fA0cd7a51901a5EC03DE3d?chain_ids=8453&filters=ERC20', options);
-        const data = await response.json();
         
-        // Log the raw response
-        console.log('Raw API Response:', JSON.stringify(data, null, 2));
-        
-        // Check if data exists and has the expected structure
-        if (!data || typeof data !== 'object') {
-            throw new Error('Invalid data structure received from API');
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        res.status(200).json(data);
+        const textData = await response.text(); // Get raw response text
+        console.log('Raw response:', textData);
+
+        try {
+            const data = JSON.parse(textData); // Try to parse as JSON
+            res.status(200).json(data);
+        } catch (parseError) {
+            console.error('JSON Parse Error:', parseError);
+            res.status(500).json({ 
+                error: 'Failed to parse API response',
+                rawResponse: textData
+            });
+        }
+
     } catch (error) {
-        console.error('API Error:', error);
-        res.status(500).json({ error: error.message || 'Failed to fetch data' });
+        console.error('Fetch Error:', error);
+        res.status(500).json({ 
+            error: error.message || 'Failed to fetch data',
+            type: error.constructor.name
+        });
     }
 } 
