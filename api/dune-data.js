@@ -21,7 +21,7 @@ export default async function handler(req, res) {
         const address = '0xf924efc8830bfA1029fA0cd7a51901a5EC03DE3d';
         const params = new URLSearchParams({
             chain_ids: '8453',
-            filters: 'ERC20'
+            filters: 'erc20'
         });
 
         const url = `${baseUrl}/${address}?${params}`;
