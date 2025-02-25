@@ -33,19 +33,25 @@ export default async function handler(req, res) {
         console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Error response:', errorText);
-            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-        res.status(200).json(data);
+        console.log('API Response Data:', JSON.stringify(data, null, 2));
+
+        // Check if data is an array
+        if (Array.isArray(data)) {
+            res.status(200).json(data);
+        } else if (data.balances && Array.isArray(data.balances)) {
+            // If data is wrapped in an object with a balances array
+            res.status(200).json(data.balances);
+        } else {
+            // If it's a single object or different structure
+            res.status(200).json([data]);
+        }
 
     } catch (error) {
         console.error('Fetch Error:', error);
-        res.status(500).json({ 
-            error: error.message,
-            type: error.constructor.name
-        });
+        res.status(500).json({ error: error.message });
     }
 } 
