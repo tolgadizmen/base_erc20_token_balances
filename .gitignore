@@ -1,3 +1,44 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+
+# API keys and secrets
+*.pem
+*.key
+*secret*
+*password*
+*credential*
+
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Production build
+/build
+/dist
+
+# Misc
 .DS_Store
-.DS_Store?
-._* 
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE specific files
+.idea
+.vscode
+*.swp
+*.swo 
